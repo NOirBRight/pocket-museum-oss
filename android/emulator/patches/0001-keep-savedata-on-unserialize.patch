@@ -1,0 +1,52 @@
+diff --git a/include/mgba/core/serialize.h b/include/mgba/core/serialize.h
+--- a/include/mgba/core/serialize.h
++++ b/include/mgba/core/serialize.h
+@@ -27,6 +27,8 @@
+ #define SAVESTATE_RTC        8
+ #define SAVESTATE_METADATA   16
+ #define SAVESTATE_ALL        31
++/* Outside SAVESTATE_ALL. Skip restoring the cart save inside a state. */
++#define SAVESTATE_KEEP_SAVEDATA 32
+ 
+ struct mStateExtdataItem {
+ 	int32_t size;
+diff --git a/src/core/serialize.c b/src/core/serialize.c
+--- a/src/core/serialize.c
++++ b/src/core/serialize.c
+@@ -527,7 +527,7 @@
+ 			mLOG(SAVESTATE, WARN, "Savestate includes invalid screenshot");
+ 		}
+ 	}
+-	if (mStateExtdataGet(&extdata, EXTDATA_SAVEDATA, &item)) {
++	if (!(flags & SAVESTATE_KEEP_SAVEDATA) && mStateExtdataGet(&extdata, EXTDATA_SAVEDATA, &item)) {
+ 		mLOG(SAVESTATE, INFO, "Loading savedata");
+ 		if (item.data) {
+ 			if (!core->savedataRestore(core, item.data, item.size, flags & SAVESTATE_SAVEDATA)) {
+diff --git a/src/platform/libretro/libretro.c b/src/platform/libretro/libretro.c
+--- a/src/platform/libretro/libretro.c
++++ b/src/platform/libretro/libretro.c
+@@ -1041,12 +1041,23 @@
+ 	return true;
+ }
+ 
++static int g_keepSavedata = 1;
++
++__attribute__((visibility("default")))
++void mgba_keep_savedata(int keep) {
++	g_keepSavedata = keep ? 1 : 0;
++}
++
+ bool retro_unserialize(const void* data, size_t size) {
+ 	if (deferredSetup) {
+ 		_doDeferredSetup();
+ 	}
+ 	struct VFile* vfm = VFileFromConstMemory(data, size);
+-	bool success = mCoreLoadStateNamed(core, vfm, SAVESTATE_RTC);
++	int flags = SAVESTATE_RTC;
++	if (g_keepSavedata) {
++		flags |= SAVESTATE_KEEP_SAVEDATA;
++	}
++	bool success = mCoreLoadStateNamed(core, vfm, flags);
+ 	vfm->close(vfm);
+ 	return success;
+ }

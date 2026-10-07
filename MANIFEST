@@ -1,0 +1,14 @@
+# SHA-256 manifest; paths are relative to this directory.
+# MANIFEST does not list itself.
+7bda4ae4c6a9d6935408e60616add401af29b53e0194ada8fab45ac2b4d0bfdb  android/emulator/patches/0001-keep-savedata-on-unserialize.patch
+eb92c1f054e371062275eec33d37c01717d94873fe9c6435eaaf3a19a30bed27  android/emulator/rebuild-libretro.ps1
+91c74ef6f97a74cd7b9994dddcbb79a0bee51f6b1523654f662d088c61c7878d  app/models/gba_cartridge.glb
+319daefe38ebeead3df178e5937898a52d67c0c795f54f1c0bb10ac3b9cffb63  LICENSES/blip_buf-LGPL-2.1.txt
+c826935b7abb76b3f79b9b333835d3877ce8ec68fdf58be32fc8723fd6aa76ae  LICENSES/cartridge-CC-BY-SA-source-notice.txt
+a7ef261146df6a67facb997f5526af2f8f078613be96d1137b3369e29cad1e6f  LICENSES/inih-BSD-3-Clause.txt
+cde215e5b42363eb28ca2462c4558ff4807b38f383c537624c31e44657ac58f4  LICENSES/MPL-2.0.txt
+6436eb6d3440f9547c6d9ff65af41aee4cf995178cc85c141ae5e74988e92a2c  README.md
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  tools/models/cartridge/__init__.py
+24efa62f315fa142e0e65b0cea7494f019593b2e0d96d90cae3c29a92f653787  tools/models/cartridge/__main__.py
+51249e3890322d2f133b7756a74a31397f025b99113c4628abbce48877a94bee  tools/models/cartridge/build.py
+3897dc1756f6dbabd5ed7c10cfc5aded564208108ea0b561294e295d0b19cae4  tools/models/cartridge/simplify.gd
