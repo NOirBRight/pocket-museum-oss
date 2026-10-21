@@ -5,7 +5,7 @@
 ## mGBA 内核
 
 - 上游： [mGBA](https://github.com/mgba-emu/mgba)，版本 `0.10.5`，提交 [`26b7884bc25a5933960f3cdcd98bac1ae14d42e2`](https://github.com/mgba-emu/mgba/commit/26b7884bc25a5933960f3cdcd98bac1ae14d42e2)。许可：MPL-2.0，全文见 [`LICENSES/MPL-2.0.txt`](LICENSES/MPL-2.0.txt)。
-- 本项目补丁：`android/emulator/patches/0001-keep-savedata-on-unserialize.patch`（当前共 1 个）。它增加 `SAVESTATE_KEEP_SAVEDATA` 标志，并在 libretro 导出默认启用的 `mgba_keep_savedata`，使 `retro_unserialize` 可跳过即时存档状态内的游戏内存档恢复。
+- 本项目补丁（共 2 个，按文件名顺序）：`android/emulator/patches/0001-keep-savedata-on-unserialize.patch`、`android/emulator/patches/0002-run-ahead-audio-checkpoint.patch`。0001 增加 `SAVESTATE_KEEP_SAVEDATA` 标志，并在 libretro 导出默认启用的 `mgba_keep_savedata`，使 `retro_unserialize` 可跳过即时存档状态内的游戏内存档恢复。
 - 重建脚本：[`android/emulator/rebuild-libretro.ps1`](android/emulator/rebuild-libretro.ps1)。该副本不含开发机默认路径；运行前需要设置 `MGBA_SRC` 和 `ANDROID_SDK_ROOT`。`MGBA_SRC` 应指向提交 `26b7884bc25a5933960f3cdcd98bac1ae14d42e2` 的干净源码检出。
 
 ```powershell
@@ -49,7 +49,7 @@ This directory contains only the mGBA core source materials and the modified car
 ## mGBA core
 
 - Upstream: [mGBA](https://github.com/mgba-emu/mgba), version `0.10.5`, commit [`26b7884bc25a5933960f3cdcd98bac1ae14d42e2`](https://github.com/mgba-emu/mgba/commit/26b7884bc25a5933960f3cdcd98bac1ae14d42e2). License: MPL-2.0; full text: [`LICENSES/MPL-2.0.txt`](LICENSES/MPL-2.0.txt).
-- Project patch: `android/emulator/patches/0001-keep-savedata-on-unserialize.patch` (one patch at this revision). It adds the `SAVESTATE_KEEP_SAVEDATA` flag and a default-enabled `mgba_keep_savedata` libretro export, allowing `retro_unserialize` to skip restoring the in-game save embedded in a save state.
+- Project patches (2, in filename order): `android/emulator/patches/0001-keep-savedata-on-unserialize.patch`, `android/emulator/patches/0002-run-ahead-audio-checkpoint.patch`. 0001 adds the `SAVESTATE_KEEP_SAVEDATA` flag and a default-enabled `mgba_keep_savedata` libretro export, allowing `retro_unserialize` to skip restoring the in-game save embedded in a save state.
 - Build script: [`android/emulator/rebuild-libretro.ps1`](android/emulator/rebuild-libretro.ps1). This exported copy has no workstation-specific defaults. Set `MGBA_SRC` and `ANDROID_SDK_ROOT`; `MGBA_SRC` must point to a clean checkout at commit `26b7884bc25a5933960f3cdcd98bac1ae14d42e2`.
 
 The build uses NDK `28.2.13676358`, CMake `3.22.1`, Ninja, `arm64-v8a`, Android API 26, and Release configuration. It enables the libretro GBA core and LTO, and disables the GB core, Qt, SDL, GL/GLES, scripting, debuggers, tests, and example tools. Optional dependencies disabled by the script include Discord RPC, FFmpeg, libzip, Lua, LZMA, minizip, PNG, SQLite3, zlib, libelf, libepoxy, editline, and the GDB stub.
