@@ -1,0 +1,141 @@
+--- a/include/mgba/core/blip_buf.h
++++ b/include/mgba/core/blip_buf.h
+@@ -4,6 +4,8 @@
+ /* blip_buf 1.1.0 */
+ #ifndef BLIP_BUF_H 
+ #define BLIP_BUF_H
++
++#include <stddef.h>
+ 
+ #ifdef __cplusplus
+ 	extern "C" {
+@@ -62,6 +64,11 @@
+ void blip_delete( blip_t* );
+ 
+ 
++/* In-memory checkpoints preserve the resampler integrator and unread tail. */
++size_t blip_state_size(const blip_t*);
++int blip_save_state(const blip_t*, void*, size_t);
++int blip_load_state(blip_t*, const void*, size_t);
++
+ /* Deprecated */
+ typedef blip_t blip_buffer_t;
+ 
+--- a/src/third-party/blip_buf/blip_buf.c
++++ b/src/third-party/blip_buf/blip_buf.c
+@@ -123,6 +123,25 @@
+ 		check_assumptions();
+ 	}
+ 	return m;
++}
++
++size_t blip_state_size(const blip_t* m)
++{
++	return sizeof *m + (m->size + buf_extra) * sizeof(buf_t);
++}
++
++int blip_save_state(const blip_t* m, void* out, size_t size)
++{
++	if (!out || size != blip_state_size(m)) return 0;
++	memcpy(out, m, size);
++	return 1;
++}
++
++int blip_load_state(blip_t* m, const void* data, size_t size)
++{
++	if (!data || size != blip_state_size(m) || ((const blip_t*) data)->size != m->size) return 0;
++	memcpy(m, data, size);
++	return 1;
+ }
+ 
+ void blip_delete( blip_t* m )
+--- a/src/platform/libretro/libretro.c
++++ b/src/platform/libretro/libretro.c
+@@ -109,6 +109,77 @@
+ static int32_t audioLowPassLeftPrev = 0;
+ static int32_t audioLowPassRightPrev = 0;
+ 
++/* Transient output history is deliberately separate from ordinary save states.
++ * Capture after the real frame; restore AFTER retro_unserialize, never clear it.
++ * GBA only: this launcher does not build the GB core. */
++static struct {
++	void* left;
++	void* right;
++	size_t leftSize;
++	size_t rightSize;
++	struct GBAAudio gba;
++	float mean;
++	int32_t lowPassLeft;
++	int32_t lowPassRight;
++	bool valid;
++} predictionAudio;
++
++RETRO_API bool mgba_prediction_audio(int restore) {
++#ifdef M_CORE_GBA
++	if (!core || core->platform(core) != mPLATFORM_GBA) return false;
++	struct GBAAudio* audio = &((struct GBA*) core->board)->audio;
++	blip_t* left = core->getAudioChannel(core, 0);
++	blip_t* right = core->getAudioChannel(core, 1);
++	if (restore) {
++		if (!predictionAudio.valid || blip_state_size(left) != predictionAudio.leftSize ||
++		    blip_state_size(right) != predictionAudio.rightSize) return false;
++		predictionAudio.valid = false;
++		if (!blip_load_state(left, predictionAudio.left, predictionAudio.leftSize) ||
++		    !blip_load_state(right, predictionAudio.right, predictionAudio.rightSize)) return false;
++		/* Keep the timing queue links rebuilt by the core state restore. All
++		 * remaining fields are same-instance audio state, including PSG sample
++		 * phase/history not represented by the ordinary save-state format. */
++		struct mTimingEvent sampleEvent = audio->sampleEvent;
++		struct mTimingEvent frameEvent = audio->psg.frameEvent;
++		struct mTimingEvent psgSampleEvent = audio->psg.sampleEvent;
++		*audio = predictionAudio.gba;
++		audio->sampleEvent = sampleEvent;
++		audio->psg.frameEvent = frameEvent;
++		audio->psg.sampleEvent = psgSampleEvent;
++		audioSamplesPerFrameAvg = predictionAudio.mean;
++		audioLowPassLeftPrev = predictionAudio.lowPassLeft;
++		audioLowPassRightPrev = predictionAudio.lowPassRight;
++		return true;
++	}
++	predictionAudio.valid = false;
++	size_t leftSize = blip_state_size(left);
++	size_t rightSize = blip_state_size(right);
++	if (leftSize != predictionAudio.leftSize) {
++		void* resized = realloc(predictionAudio.left, leftSize);
++		if (!resized) return false;
++		predictionAudio.left = resized;
++		predictionAudio.leftSize = leftSize;
++	}
++	if (rightSize != predictionAudio.rightSize) {
++		void* resized = realloc(predictionAudio.right, rightSize);
++		if (!resized) return false;
++		predictionAudio.right = resized;
++		predictionAudio.rightSize = rightSize;
++	}
++	if (!blip_save_state(left, predictionAudio.left, leftSize) ||
++	    !blip_save_state(right, predictionAudio.right, rightSize)) return false;
++	predictionAudio.gba = *audio;
++	predictionAudio.mean = audioSamplesPerFrameAvg;
++	predictionAudio.lowPassLeft = audioLowPassLeftPrev;
++	predictionAudio.lowPassRight = audioLowPassRightPrev;
++	predictionAudio.valid = true;
++	return true;
++#else
++	UNUSED(restore);
++	return false;
++#endif
++}
++
+ static const int keymap[] = {
+ 	RETRO_DEVICE_ID_JOYPAD_A,
+ 	RETRO_DEVICE_ID_JOYPAD_B,
+@@ -513,6 +584,9 @@
+ }
+ 
+ void retro_deinit(void) {
++	free(predictionAudio.left);
++	free(predictionAudio.right);
++	memset(&predictionAudio, 0, sizeof(predictionAudio));
+ 	free(outputBuffer);
+ 
+ 	if (audioSampleBuffer) {

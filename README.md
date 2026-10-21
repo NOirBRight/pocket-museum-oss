@@ -1,6 +1,6 @@
-# Pocket Museum - GBA：公开源码材料
+# AYASpace 2 - Pocket Museum：公开源码材料
 
-本目录只收录本应用 `0.1` 中对应的 mGBA 内核来源材料与改过的卡带模型。不含应用其余代码与素材，也不含 `libmgba_libretro.so` 内核二进制。
+本目录只收录本应用 `0.3.1` 中对应的 mGBA 内核来源材料与改过的卡带模型。不含应用其余代码与素材，也不含 `libmgba_libretro.so` 内核二进制。
 
 ## mGBA 内核
 
@@ -26,7 +26,7 @@ pwsh -NoProfile -File .\android\emulator\rebuild-libretro.ps1
 
 ## 卡带模型
 
-`app/models/gba_cartridge.glb` 是 4312 个三角面的改后模型（177008 字节，SHA-256 `91c74ef6f97a74cd7b9994dddcbb79a0bee51f6b1523654f662d088c61c7878d`）。它改自 DiniertoDesigns 的 “Gameboy Advance Cartridge”：<https://www.thingiverse.com/thing:6569544>。
+`app/models/gba_cartridge.glb` 是 13410 个三角面的改后模型（544968 字节，SHA-256 `3455fa377d14bd7abb2250ee3775f7051b77d5c58d86ecdd1c0c87b02ab545cf`）。它改自 DiniertoDesigns 的 “Gameboy Advance Cartridge”：<https://www.thingiverse.com/thing:6569544>。
 
 原页面和模型包只写 `Creative Commons - Attribution - Share Alike`，没有许可版本号；本目录的 [`LICENSES/cartridge-CC-BY-SA-source-notice.txt`](LICENSES/cartridge-CC-BY-SA-source-notice.txt) 只记录这个原始许可名称，不代选具体版本。改动包括在底部插槽内加入电路板和 32 个触点、拆分材质、增加标签贴纸面与 UV、减面并移除背面铭牌字的侧壁。改后模型按来源所写的同一许可提供。原始 STL 与 STEP 不包含在内。
 
@@ -42,9 +42,9 @@ python -m tools.models.cartridge --source '<original STL path>' --godot '<Godot 
 
 ---
 
-# Pocket Museum - GBA: public source materials
+# AYASpace 2 - Pocket Museum: public source materials
 
-This directory contains only the mGBA core source materials and the modified cartridge model used by app version `0.1`. It does not contain the rest of the app's code and assets or the `libmgba_libretro.so` core binary.
+This directory contains only the mGBA core source materials and the modified cartridge model used by app version `0.3.1`. It does not contain the rest of the app's code and assets or the `libmgba_libretro.so` core binary.
 
 ## mGBA core
 
@@ -63,7 +63,7 @@ The checked `.so` binaries expose `blip_*` and `ini_parse*` symbols in `.dynsym`
 
 ## Cartridge model
 
-`app/models/gba_cartridge.glb` is the modified model with 4312 triangles (177008 bytes; SHA-256 `91c74ef6f97a74cd7b9994dddcbb79a0bee51f6b1523654f662d088c61c7878d`). It is adapted from “Gameboy Advance Cartridge” by DiniertoDesigns: <https://www.thingiverse.com/thing:6569544>.
+`app/models/gba_cartridge.glb` is the modified model with 13410 triangles (544968 bytes; SHA-256 `3455fa377d14bd7abb2250ee3775f7051b77d5c58d86ecdd1c0c87b02ab545cf`). It is adapted from “Gameboy Advance Cartridge” by DiniertoDesigns: <https://www.thingiverse.com/thing:6569544>.
 
 The source page and model archive state `Creative Commons - Attribution - Share Alike` without a version number. [`LICENSES/cartridge-CC-BY-SA-source-notice.txt`](LICENSES/cartridge-CC-BY-SA-source-notice.txt) records that source wording and does not select a version. Changes: a circuit board and 32 contacts were added inside the bottom slot; materials were separated; a label sticker surface and UVs were added; the mesh was simplified and the side walls of the back nameplate lettering were removed. The modified model is offered under the same license stated by the source. The original STL and STEP files are not included.
 

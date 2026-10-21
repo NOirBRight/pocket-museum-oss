@@ -14,15 +14,17 @@ $ver = Get-Content (Join-Path $Src "version.cmake") -Raw
 if ($ver -notmatch "LIB_VERSION_MAJOR 0" -or $ver -notmatch "LIB_VERSION_MINOR 10" -or $ver -notmatch "LIB_VERSION_PATCH 5") {
     throw "源码不是 mGBA 0.10.5：$Src"
 }
-$Patch = Join-Path $PSScriptRoot "patches\0001-keep-savedata-on-unserialize.patch"
-if (!(Test-Path $Patch)) { throw "找不到补丁：$Patch" }
-git -C $Src apply --check --whitespace=nowarn $Patch
-if ($LASTEXITCODE -eq 0) {
-    git -C $Src apply --whitespace=nowarn $Patch
-    if ($LASTEXITCODE -ne 0) { throw "打补丁失败：$Patch" }
-} else {
-    git -C $Src apply --reverse --check --whitespace=nowarn $Patch
-    if ($LASTEXITCODE -ne 0) { throw "补丁既打不上，也不是已经打过：$Patch" }
+$Patches = Get-ChildItem (Join-Path $PSScriptRoot "patches") -Filter '*.patch' | Sort-Object Name
+foreach ($PatchFile in $Patches) {
+    $Patch = $PatchFile.FullName
+    git -C $Src apply --check --whitespace=nowarn $Patch
+    if ($LASTEXITCODE -eq 0) {
+        git -C $Src apply --whitespace=nowarn $Patch
+        if ($LASTEXITCODE -ne 0) { throw "打补丁失败：$Patch" }
+    } else {
+        git -C $Src apply --reverse --check --whitespace=nowarn $Patch
+        if ($LASTEXITCODE -ne 0) { throw "补丁既打不上，也不是已经打过：$Patch" }
+    }
 }
 New-Item -ItemType Directory -Force -Path $Build, $OutDir | Out-Null
 & $Cmake -S $Src -B $Build -G Ninja "-DCMAKE_MAKE_PROGRAM=$Ninja" `

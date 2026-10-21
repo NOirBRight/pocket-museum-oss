@@ -90,19 +90,27 @@ MATERIALS = [
     ("PCB", "2f7d4a", 0.55, 0.0),
     ("Gold", "d9a441", 0.25, 1.0),
     ("Metal", "b8a36c", 0.3, 1.0),
+    ("ShellBack", "4b4c4e", 0.62, 0.0),
+    ("GlossBack", "4b4c4e", 0.22, 0.0),
+    ("Chip", "202322", 0.8, 0.0),
 ]
 SHELL, GLOSS, LABEL, PCB, GOLD, METAL = range(6)
+SHELL_BACK, GLOSS_BACK, CHIP = range(6, 9)
 
 
 def build(source: Path, godot: Path, out: Path = GLB) -> dict:
     vertices, faces = decimate(*load_source(source), SIMPLIFY_ERROR, godot)
     faces = flatten_nameplate(vertices, faces)
     material = classify(vertices, faces)
+    back = vertices[faces].mean(axis=1)[:, 2] < (FRONT + BACK) / 2
+    material[back & (material == SHELL)] = SHELL_BACK
+    material[back & (material == GLOSS)] = GLOSS_BACK
     normals = corner_normals(vertices, faces, CREASE_DEG)
     parts = [(index, *split(vertices, faces, normals, material == index), None) for index in np.unique(material)]
     parts.append((LABEL, *label_sticker()))
     parts.append((PCB, *flat(*pcb_board()), None))
     parts.append((GOLD, *flat(*pins()), None))
+    parts.extend(chips())
     primitives = merge_parts(parts)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(write_glb(primitives))
@@ -307,7 +315,14 @@ def box(x0, x1, y0, y1, z0, z1):
 
 def pcb_board():
     """电路板：贴着插槽的顶，下沿比外壳缩进 0.35。"""
-    return box(-PCB_HALF_W, PCB_HALF_W, BOTTOM + 0.35, BOTTOM + SLOT_DEPTH, PCB_Z[0], PCB_Z[1])
+    return box(-PCB_HALF_W, PCB_HALF_W, BOTTOM + 0.35, LABEL_Y + 13.0, PCB_Z[0], PCB_Z[1])
+
+
+def chips():
+    # Only silhouettes; clear of the slot contacts and the central rear screw post.
+    return [(CHIP, *flat(*box(x0, x1, LABEL_Y + y0, LABEL_Y + y1, z0, z1)), None)
+            for z0, z1 in [(PCB_Z[1], PCB_Z[1] + 0.65), (PCB_Z[0] - 0.65, PCB_Z[0])]
+            for x0, x1, y0, y1 in [(-18, -3, -5, 5), (5, 17, -3, 6), (-18, -10, 8, 11)]]
 
 
 def pins():
